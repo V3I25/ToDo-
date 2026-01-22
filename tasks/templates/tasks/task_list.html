@@ -1,0 +1,62 @@
+{% extends "tasks/base.html" %}
+
+{% block content %}
+  <div class="actions" style="justify-content: space-between; margin-bottom: 20px;">
+    <div>
+      <h2>Ваши задачи</h2>
+      <p class="meta">Сегодня: {{ now|date:"d.m.Y H:i" }}</p>
+    </div>
+    <a class="button" href="{% url 'tasks:create' %}">Новая задача</a>
+  </div>
+
+  <div class="grid">
+    {% for task in tasks %}
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <div>
+            <h3><a href="{% url 'tasks:detail' task.id %}">{{ task.title }}</a></h3>
+            <p class="meta">{{ task.description|default:"Описание не задано" }}</p>
+          </div>
+          <div>
+            {% if task.is_overdue %}
+              <span class="badge danger">Срок нарушен</span>
+            {% elif task.status == "done" %}
+              <span class="badge success">Готово</span>
+            {% elif task.status == "in_progress" %}
+              <span class="badge warning">В работе</span>
+            {% else %}
+              <span class="badge">Запланировано</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <div class="progress">
+            <span style="width: {{ task.progress }}%;"></span>
+          </div>
+          <p class="meta" style="margin-top: 8px;">
+            Прогресс: {{ task.progress }}%
+            {% if task.subtasks.count %}
+              · Подзадач: {{ task.subtasks.count }}
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="list" style="margin-top: 12px;">
+          <div class="meta">План: {{ task.plan_start|date:"d.m.Y" }} → {{ task.plan_end|date:"d.m.Y" }}</div>
+          <div class="meta">Напоминание: {{ task.reminder_at|date:"d.m.Y H:i" }}</div>
+          <div class="meta">Соблюдение плана: {{ task.plan_status }}</div>
+        </div>
+
+        <div class="actions" style="margin-top: 16px;">
+          <a class="button secondary" href="{% url 'tasks:update' task.id %}">Редактировать</a>
+          <a class="button" href="{% url 'tasks:detail' task.id %}">Подробнее</a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card">
+        <p>Пока нет задач. Создайте первую, чтобы начать контроль.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "tasks/base.html" %}
+
+{% block content %}
+  <div class="actions" style="justify-content: space-between; margin-bottom: 20px;">
+    <div>
+      <h2>{{ task.title }}</h2>
+      <p class="meta">{{ task.description|default:"Описание не задано" }}</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="{% url 'tasks:update' task.id %}">Редактировать</a>
+      <a class="button secondary" href="{% url 'tasks:list' %}">К списку</a>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+    <div class="card">
+      <h3>Прогресс задачи</h3>
+      <div class="progress">
+        <span style="width: {{ task.progress }}%;"></span>
+      </div>
+      <p class="meta" style="margin-top: 8px;">{{ task.progress }}%</p>
+      {% if subtask_progress %}
+        <p class="meta">Средний прогресс подзадач: {{ subtask_progress }}%</p>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3>План и сроки</h3>
+      <p class="meta">Старт: {{ task.plan_start|date:"d.m.Y" }}</p>
+      <p class="meta">Финиш: {{ task.plan_end|date:"d.m.Y" }}</p>
+      <p class="meta">Соблюдение плана: {{ task.plan_status }}</p>
+      {% if task.is_overdue %}
+        <span class="badge danger">Нарушен срок</span>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3>Напоминания</h3>
+      <p class="meta">Следующее напоминание: {{ task.reminder_at|date:"d.m.Y H:i" }}</p>
+      <p class="meta">Статус: {{ task.get_status_display }}</p>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top: 24px;">
+    <div class="card">
+      <h3>Подзадачи</h3>
+      <div class="list" style="margin-top: 12px;">
+        {% for subtask in subtasks %}
+          <div class="subtask">
+            <div>
+              <strong>{{ subtask.title }}</strong>
+              <div class="meta">Прогресс: {{ subtask.progress }}%</div>
+            </div>
+            <a class="button secondary" href="{% url 'tasks:subtask_toggle' task.id subtask.id %}">
+              {% if subtask.is_done %}Вернуть{% else %}Готово{% endif %}
+            </a>
+          </div>
+        {% empty %}
+          <p class="meta">Подзадач нет — добавьте первую.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Добавить подзадачу</h3>
+      <form method="post" action="{% url 'tasks:subtask_create' task.id %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="id_title">Название</label>
+          {{ subtask_form.title }}
+        </div>
+        <div class="field">
+          <label for="id_progress">Прогресс (%)</label>
+          {{ subtask_form.progress }}
+        </div>
+        <div class="field">
+          <label for="id_is_done">Готово</label>
+          {{ subtask_form.is_done }}
+        </div>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
